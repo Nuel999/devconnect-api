@@ -32,4 +32,31 @@ DevConnect API is a powerful RESTful backend for a developer-focused social plat
 
 ---
 
-##  Folder Structure
+###  Register User
+
+![Register Success](./screenshots/Register-User.png)
+
+###  Login User
+
+![Login Success](./screenshots/Login-User.png)
+
+###  Create Post
+
+![Create Post](./screenshots/Create-Post.png)
+
+###  Get all Post
+
+![Get Post](./screenshots/Get-all-post.png)
+
+###  Like Post
+
+![Like Post](./screenshots/Liked-Post.png)
+
+###  Unlike Post
+
+![Unlike Post](./screenshots/Unlike-Post.png)
+
+###  Protected Route
+
+![Protected Route](./screenshots/Protected-Route.png)
+
