@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login - DevConnect</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 300px;
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      width: 100%;
+      padding: 0.75rem;
+      background-color: #007bff;
+      border: none;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    .message {
+      margin-top: 1rem;
+      text-align: center;
+    }
+
+    .success {
+      color: green;
+    }
+
+    .error {
+      color: red;
+    }
+
+    #loginBtn {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.3s ease;
+}
+
+#loginBtn:hover {
+  background-color: #0056b3;
+}
+
+#loginBtn.loading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+#loginBtn.loading::after {
+  content: '';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  margin-top: -8px;
+  border: 2px solid white;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Login</h2>
+    <form id="loginForm">
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="password" id="password" placeholder="Password" required />
+    <button id="loginBtn" type="submit">Login</button>
+    </form>
+    <div id="message" class="message"></div>
+  </div>
+
+  <script>
+  const form = document.getElementById('loginForm');
+  const message = document.getElementById('message');
+  const loginBtn = document.getElementById('loginBtn'); // 🔹 Make sure button has id="loginBtn"
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    message.textContent = '';
+    loginBtn.disabled = true;
+    loginBtn.classList.add('loading');
+
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    try {
+      const res = await fetch('https://devconnect-api-srvk.onrender.com/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        message.textContent = '✅ Login successful!';
+        message.className = 'success';
+        localStorage.setItem('token', data.token);
+
+        setTimeout(() => {
+          window.location.href = 'home.html';
+        }, 1500);
+      } else {
+        message.textContent = data.message || 'Login failed';
+        message.className = 'error';
+      }
+    } catch (err) {
+      message.textContent = 'Error: ' + err.message;
+      message.className = 'error';
+    } finally {
+      loginBtn.disabled = false;
+      loginBtn.classList.remove('loading');
+    }
+  });
+</script>
+</body>
+</html>

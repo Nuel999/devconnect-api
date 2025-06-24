@@ -26,6 +26,14 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
+const path = require('path');
+app.use(express.static(path.join(__dirname, 'frontend')));
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend', 'login.html'));
+});
+
+
 //  Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes);

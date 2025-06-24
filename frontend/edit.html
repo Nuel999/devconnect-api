@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Edit Post - DevConnect</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      padding: 40px;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 6px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    input, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+
+    button {
+      background-color: #007bff;
+      color: #fff;
+      cursor: pointer;
+      border: none;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    #message {
+      margin-bottom: 15px;
+      padding: 10px;
+      border-radius: 4px;
+    }
+
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2px solid #fff;
+      border-top: 2px solid #007bff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      vertical-align: middle;
+      margin-left: 10px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Edit Post</h2>
+    <div id="message"></div>
+    <form id="editPostForm">
+      <input type="text" id="title" placeholder="Post Title" required />
+      <textarea id="desc" rows="4" placeholder="Post Description" required></textarea>
+      <input type="text" id="previewPix" placeholder="Preview Image URL" required />
+      <input type="text" id="detailedPix" placeholder="Detailed Image URL" required />
+      <button type="submit" id="submitBtn">Update Post</button>
+    </form>
+  </div>
+
+  <script>
+  const form = document.getElementById('editPostForm');
+  const token = localStorage.getItem('token');
+  const postId = new URLSearchParams(window.location.search).get('id');
+
+  async function fetchPost() {
+    try {
+      const res = await fetch(`https://devconnect-api-srvk.onrender.com/api/posts/${postId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        document.getElementById('title').value = data.data.title;
+        document.getElementById('desc').value = data.data.desc;
+        document.getElementById('previewPix').value = data.data.previewPix;
+        document.getElementById('detailedPix').value = data.data.detailedPix;
+      } else {
+        alert('Post not found');
+      }
+    } catch (err) {
+      alert('Error loading post');
+    }
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const updatedData = {
+      title: document.getElementById('title').value.trim(),
+      desc: document.getElementById('desc').value.trim(),
+      previewPix: document.getElementById('previewPix').value.trim(),
+      detailedPix: document.getElementById('detailedPix').value.trim()
+    };
+
+    try {
+      const res = await fetch(`https://devconnect-api-srvk.onrender.com/api/posts/${postId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(updatedData)
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert('✅ Post updated successfully!');
+        window.location.href = 'home.html';
+      } else {
+        alert(data.message || 'Update failed');
+      }
+    } catch (err) {
+      alert('Error: ' + err.message);
+    }
+  });
+
+  fetchPost(); // Load post on page load
+</script>
+
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DevConnect - All Posts</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f2f2f2;
+    }
+    h1 {
+      text-align: center;
+    }
+    .post {
+      background: white;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 5px;
+      position: relative;
+    }
+    .post img {
+      max-width: 100%;
+    }
+    .edit-btn, .like-btn {
+      margin-top: 10px;
+      margin-right: 10px;
+      padding: 6px 12px;
+      font-size: 14px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .edit-btn {
+      background-color: #007bff;
+      color: white;
+    }
+    .edit-btn:hover {
+      background-color: #0056b3;
+    }
+    .like-btn {
+      background-color: #ffc107;
+      color: #212529;
+    }
+    .like-btn:hover {
+      background-color: #e0a800;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 15px 0;
+      padding: 0 10px;
+    }
+    .create-post-btn, .logout-btn {
+      padding: 10px 16px;
+      font-size: 14px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .create-post-btn {
+      background-color: #28a745;
+      color: white;
+    }
+    .create-post-btn:hover {
+      background-color: #218838;
+    }
+    .logout-btn {
+      background-color: #dc3545;
+      color: white;
+    }
+    .logout-btn:hover {
+      background-color: #c82333;
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <button class="create-post-btn" onclick="window.location.href='create.html'">Create New Post</button>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+    <button class="create-post-btn" onclick="window.location.href='myposts.html'">My Posts</button>
+  </div>
+
+  <h1>All Posts</h1>
+  <div id="postsContainer"></div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    const postsContainer = document.getElementById('postsContainer');
+
+    if (!token) {
+      alert("You're not logged in.");
+      window.location.href = 'login.html';
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = 'login.html';
+    }
+
+    function parseJwt(token) {
+      try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c =>
+          '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+        ).join(''));
+        return JSON.parse(jsonPayload);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    async function fetchPosts() {
+      try {
+        const res = await fetch('https://devconnect-api-srvk.onrender.com/api/posts', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const contentType = res.headers.get('content-type') || '';
+        let data;
+
+        if (contentType.includes('application/json')) {
+          data = await res.json();
+        } else {
+          const text = await res.text();
+          throw new Error(`Unexpected response: ${text}`);
+        }
+
+        if (!res.ok) {
+          postsContainer.innerHTML = `<p style="color:red;">${data.message || 'Failed to fetch posts.'}</p>`;
+          return;
+        }
+
+        const userId = parseJwt(token)?.userId;
+
+        if (!data.data || data.data.length === 0) {
+          postsContainer.innerHTML = `<p>No posts yet.</p>`;
+          return;
+        }
+
+        postsContainer.innerHTML = ''; // Clear existing
+        data.data.forEach(post => {
+          const div = document.createElement('div');
+          div.className = 'post';
+
+          const hasLiked = post.likes.includes(userId);
+          const likeText = hasLiked ? 'Unlike' : 'Like';
+
+          div.innerHTML = `
+            <h3>${post.title}</h3>
+            <p>${post.desc}</p>
+            <img src="${post.previewPix}" alt="Preview Image" />
+            <br />
+            <small>Created by: ${post.creator}</small>
+            <br />
+            <small>Likes: ${post.likes.length}</small>
+            <br />
+            <button class="like-btn" onclick="toggleLike('${post._id}', this)">${likeText}</button>
+          `;
+
+          if (userId && post.creator === userId) {
+            const editBtn = document.createElement('button');
+            editBtn.textContent = 'Edit';
+            editBtn.className = 'edit-btn';
+            editBtn.onclick = () => {
+              window.location.href = `edit.html?id=${post._id}`;
+            };
+            div.appendChild(editBtn);
+          }
+
+          postsContainer.appendChild(div);
+        });
+
+      } catch (err) {
+        postsContainer.innerHTML = `<p style="color:red;">Error: ${err.message}</p>`;
+      }
+    }
+
+    async function toggleLike(postId, button) {
+  try {
+    const res = await fetch(`https://devconnect-api-srvk.onrender.com/api/posts/${postId}/like`, {
+      method: 'POST', // <-- Correct method
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    const contentType = res.headers.get('content-type') || '';
+    let data;
+
+    if (contentType.includes('application/json')) {
+      data = await res.json();
+    } else {
+      const text = await res.text();
+      throw new Error(`Unexpected response: ${text}`);
+    }
+
+    if (res.ok) {
+      button.textContent = data.liked ? 'Unlike' : 'Like';
+      fetchPosts(); // Refresh to update like count
+    } else {
+      alert(data.message || 'Could not update like.');
+    }
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+
+    fetchPosts();
+  </script>
+</body>
+</html>

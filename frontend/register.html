@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Register</title>
+  <style>
+    body {
+      font-family: Arial;
+      padding: 20px;
+      max-width: 400px;
+      margin: auto;
+    }
+
+    input,
+    button {
+      display: block;
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+    }
+
+    .success {
+      color: green;
+      margin-top: 10px;
+    }
+
+    .error {
+      color: red;
+      margin-top: 10px;
+    }
+
+    /* Button Styles */
+    #registerBtn {
+      font-size: 16px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      position: relative;
+      transition: background-color 0.3s ease;
+    }
+
+    #registerBtn:hover {
+      background-color: #218838;
+    }
+
+    #registerBtn.loading {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    #registerBtn.loading::after {
+      content: '';
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      width: 16px;
+      height: 16px;
+      margin-top: -8px;
+      border: 2px solid white;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+<body>
+  <h2>Register</h2>
+  <form id="registerForm">
+    <input type="text" id="name" placeholder="Full Name" required />
+    <input type="email" id="email" placeholder="Email Address" required />
+    <input type="password" id="password" placeholder="Password" required />
+    <button id="registerBtn" type="submit">Register</button>
+  </form>
+  <div id="message" class="error" style="white-space: pre-line;"></div>
+
+  <script>
+    const form = document.getElementById('registerForm');
+    const message = document.getElementById('message');
+    const registerBtn = document.getElementById('registerBtn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      message.textContent = '';
+      registerBtn.disabled = true;
+      registerBtn.classList.add('loading');
+
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      try {
+        const res = await fetch('https://devconnect-api-srvk.onrender.com/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          message.textContent = '✅ Registration successful!';
+          message.className = 'success';
+          localStorage.setItem('token', data.token);
+
+          setTimeout(() => {
+            window.location.href = 'login.html';
+          }, 1500);
+        } else {
+          if (data.errors && Array.isArray(data.errors)) {
+            message.textContent = data.errors.join('\n');
+          } else {
+            message.textContent = data.message || 'Registration failed';
+          }
+          message.className = 'error';
+        }
+      } catch (err) {
+        message.textContent = 'Error: ' + err.message;
+        message.className = 'error';
+      } finally {
+        registerBtn.disabled = false;
+        registerBtn.classList.remove('loading');
+      }
+    });
+  </script>
+</body>
+</html>

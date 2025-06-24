@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Create Post - DevConnect</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      padding: 40px;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 6px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    input, textarea, button {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+
+    button {
+      background-color: #007bff;
+      color: #fff;
+      cursor: pointer;
+      border: none;
+      position: relative;
+    }
+
+    button.loading {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    button.loading::after {
+      content: '';
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 2px solid #fff;
+      border-top: 2px solid #007bff;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      animation: spin 0.8s linear infinite;
+      background: transparent;
+    }
+
+    @keyframes spin {
+      0% { transform: translateY(-50%) rotate(0deg); }
+      100% { transform: translateY(-50%) rotate(360deg); }
+    }
+
+    #message {
+      margin-bottom: 15px;
+      padding: 10px;
+      border-radius: 4px;
+    }
+
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Create a Post</h2>
+    <div id="message"></div>
+    <form id="createPostForm">
+      <input type="text" id="title" placeholder="Post Title" required />
+      <textarea id="desc" rows="4" placeholder="Post Description" required></textarea>
+      <input type="text" id="previewPix" placeholder="Preview Image URL" required />
+      <input type="text" id="detailedPix" placeholder="Detailed Image URL" required />
+      <button type="submit" id="submitBtn">Create Post</button>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('createPostForm');
+    const message = document.getElementById('message');
+    const submitBtn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const token = localStorage.getItem('token');
+      if (!token) {
+        message.textContent = 'You must be logged in to create a post.';
+        message.className = 'error';
+        return;
+      }
+
+      const postData = {
+        title: document.getElementById('title').value.trim(),
+        desc: document.getElementById('desc').value.trim(),
+        previewPix: document.getElementById('previewPix').value.trim(),
+        detailedPix: document.getElementById('detailedPix').value.trim()
+      };
+
+      // Show loading spinner
+      submitBtn.classList.add('loading');
+      submitBtn.textContent = 'Creating...';
+
+      try {
+        const res = await fetch('https://devconnect-api-srvk.onrender.com/api/posts', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify(postData)
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          alert('✅ Post created successfully!');
+          message.textContent = '✅ Post created successfully!';
+          message.className = 'success';
+          form.reset();
+
+          setTimeout(() => {
+            window.location.href = 'home.html';
+          }, 1500);
+        } else {
+          message.textContent = data.message || 'Failed to create post';
+          message.className = 'error';
+        }
+      } catch (err) {
+        message.textContent = 'Error: ' + err.message;
+        message.className = 'error';
+      } finally {
+        // Reset button
+        submitBtn.classList.remove('loading');
+        submitBtn.textContent = 'Create Post';
+      }
+    });
+  </script>
+</body>
+</html>
