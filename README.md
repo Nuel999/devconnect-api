@@ -7,7 +7,7 @@ DevConnect is a full-stack developer-focused social platform where users can reg
 ## 🔗 Live Links
 
 - **Backend API**: [https://devconnect-api.onrender.com](https://devconnect-api.onrender.com)
-- **Frontend (Static)**:  
+- **Frontend (Static)**: [https://nuel999.github.io/devconnect-frontend/](https://nuel999.github.io/devconnect-frontend)
 ---
 
 ## 🛠 Tech Stack
